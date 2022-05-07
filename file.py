@@ -1,20 +1,6 @@
 import re
 import json
 import os
-import pdfplumber
-
-def readPdf(fileName, wordDict):
-    with pdfplumber.open(fileName) as pdf:
-        print(len(pdf.pages))
-        for page in pdf.pages:
-            print("Reading page {}".format(page))
-            if len(page.chars) > 0:
-                for c in page.chars: 
-                    if c['text'] in wordDict.keys():
-                        wordDict[c['text']] += 1
-                    else:
-                        wordDict[c['text']] = 1
-    return wordDict
 
 def readText(fileName):
     file = open(fileName, encoding="utf-8")
@@ -32,13 +18,12 @@ def formatText(text):
     return text
 
 def updateDictionary(text, wordDict):
-    wordList = text.split(' ')
-    #Count number of times each word appears, store it in dictionary
     for word in text: 
         if word in wordDict.keys():
             wordDict[word] += 1
         else:
             wordDict[word] = 1
+    print("Text length = {}".format(len(text)))
     print("Dictionary length = {}".format(len(wordDict)))
     return wordDict
 
@@ -58,24 +43,22 @@ def printToFile(wordDict, fileName):
 def createDict(outputFile):
     printToFile({}, outputFile)
 
-def updateDict(fileName, outputFile):
-    if fileName.endswith('txt'):
-        text = readText(fileName)
-        text = formatText(text)
-        wordDict = readDict(outputFile)
-        wordDict = updateDictionary(text, wordDict)
-    elif fileName.endswith('pdf'):
-        wordDict = readDict(outputFile)
-        wordDict = readPdf(fileName, wordDict)
-    wordDict = sortDictionary(wordDict)
-    printToFile(wordDict, outputFile)
+def updateCorpus(fileName, wordDict):
+    text = readText(fileName)
+    text = formatText(text)
+    wordDict = updateDictionary(text, wordDict)
+    return wordDict
 
 def createCorpusFromDirectory(directory, corpus):
-    createDict(corpus)
+    wordDict = {}
     for root, dirs, files in os.walk(directory):
         for file in files:
-            if file.endswith('.txt') or file.endswith('.pdf'):
+            if file.endswith('.txt'):
                 print("Reading from {}".format(file))
-                updateDict(os.path.join(root, file), corpus)
+                wordDict = updateCorpus(os.path.join(root, file), wordDict)
+    print("Sorting dictionary")
+    wordDict = sortDictionary(wordDict)
+    print("Storing dictionary in {}".format(corpus))
+    printToFile(wordDict, corpus)
 
 createCorpusFromDirectory(r"C:\Users\bengi\Calibre Library", r"C:\Users\bengi\Calibre Library\corpus.json")
