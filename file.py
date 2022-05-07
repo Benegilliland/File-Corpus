@@ -1,6 +1,20 @@
 import re
 import json
 import os
+import pdfplumber
+
+def readPdf(fileName, wordDict):
+    with pdfplumber.open(fileName) as pdf:
+        print(len(pdf.pages))
+        for page in pdf.pages:
+            print("Reading page {}".format(page))
+            if len(page.chars) > 0:
+                for c in page.chars: 
+                    if c['text'] in wordDict.keys():
+                        wordDict[c['text']] += 1
+                    else:
+                        wordDict[c['text']] = 1
+    return wordDict
 
 def readText(fileName):
     file = open(fileName, encoding="utf-8")
@@ -45,10 +59,14 @@ def createDict(outputFile):
     printToFile({}, outputFile)
 
 def updateDict(fileName, outputFile):
-    text = readText(fileName)
-    text = formatText(text)
-    wordDict = readDict(outputFile)
-    wordDict = updateDictionary(text, wordDict)
+    if fileName.endswith('txt'):
+        text = readText(fileName)
+        text = formatText(text)
+        wordDict = readDict(outputFile)
+        wordDict = updateDictionary(text, wordDict)
+    elif fileName.endswith('pdf'):
+        wordDict = readDict(outputFile)
+        wordDict = readPdf(fileName, wordDict)
     wordDict = sortDictionary(wordDict)
     printToFile(wordDict, outputFile)
 
@@ -56,7 +74,7 @@ def createCorpusFromDirectory(directory, corpus):
     createDict(corpus)
     for root, dirs, files in os.walk(directory):
         for file in files:
-            if file.endswith('.txt'):
+            if file.endswith('.txt') or file.endswith('.pdf'):
                 print("Reading from {}".format(file))
                 updateDict(os.path.join(root, file), corpus)
 
