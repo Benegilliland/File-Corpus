@@ -28,15 +28,12 @@ def updateDictionary(text, wordDict):
     return wordDict
 
 def sortDictionary(wordDict):
-    #Sort in order of word frequency, with most common words appearing first
     wordDict = sorted(wordDict.items(), key=lambda x: x[1], reverse=True)
     wordDict = dict(wordDict)
     return wordDict
 
-#print("Dictionary length = {}".format(len(wordDict)))
-
 def printToFile(wordDict, fileName):
-    #Output dictionary to text file
+    print("Storing dictionary in {}".format(corpus))
     with open(fileName, 'w', encoding='utf-8') as handle:
         json.dump(wordDict, handle, ensure_ascii=False)
 
@@ -56,9 +53,7 @@ def createCorpusFromDirectory(directory, corpus):
             if file.endswith('.txt'):
                 print("Reading from {}".format(file))
                 wordDict = updateCorpus(os.path.join(root, file), wordDict)
-    print("Sorting dictionary")
     wordDict = sortDictionary(wordDict)
-    print("Storing dictionary in {}".format(corpus))
     printToFile(wordDict, corpus)
 
 createCorpusFromDirectory(r"C:\Users\bengi\Calibre Library", r"C:\Users\bengi\Calibre Library\corpus.json")
